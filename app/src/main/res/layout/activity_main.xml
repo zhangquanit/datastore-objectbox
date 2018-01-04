@@ -31,5 +31,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="query"
-        android:text="delete" />
+        android:text="query" />
+
+    <Button
+        android:id="@+id/transaction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="事务"
+        android:onClick="transaction" />
 </LinearLayout>

@@ -1,0 +1,69 @@
+
+官网地址：
+http://objectbox.io/documentation/introduction/
+
+
+--------------------------
+一、关于id
+1、对象必须有一个long类型，设置了@Id注解的字段。
+2、如果作为接口对象，有一个String类型的uid，建议作为标准的字段来查询，而不是数据表的id
+3、id=0或id=null的对象，在put的时候，会作为新数据插入。
+4、id=-1 作为ObjectBox内部使用的关键字，不能使用。
+5、id的分配机制
+默认情况下，ObjectBox会为新对象分配一个新的id，默认是自增的id，比如数据库目前最大的id是100，则新对象自增的id是101.
+默认情况下，只有ObjectBox才能分配id，如果put的对象中的id高于数据库最大的id，则会出错。
+如果你想自己分配id， 添加注解：@Id(assignable = true)，这样就可以随意分配任何有效的id，比如0.
+
+二、事务
+几乎所有的操作都使用了事务(隐式)，比如put操作使用write transaction，get使用了read transaction。在使用中几乎不用考虑事务。
+1、put 操作是一个隐式的事务
+2、如果要保存/更新多个对象，建议使用put(entities)。
+3、如果在循环中有大量的DB交互，考虑使用显式的事务，比如 runInTx()
+
+----显式事务
+runInTx：在一个runnable中执行事务
+runInReadTx：只读事务，不像write transactions，多个read transactions能够同时运行。
+runInTxAsync：在异步线程中执行事务，完成后通过callback回调
+callInTx：同runInTx(Runnable)类似，但是有返回值，并且会抛出异常
+
+比如：
+boxStore.runInTx(() -> {
+   for(User user: allUsers) {
+     if(modify(user)) box.put(user); //增加或更新
+     else box.remove(user); //移除
+   }
+});
+
+----事务的性能
+理解事务对于提高数据库操作性能有很大帮助，记住一句话：a write transaction has its price 写事务都是有代价的
+提交事务涉及到同步数据到物理储存中，对于数据库操作，相对来说是比较耗时的，往往需要几毫秒，记住尽量在一个事务中提交多个数据。
+---bad case：
+for(User user: allUsers) {
+   modify(user); // modifies properties of given user
+   box.put(user); //每个put操作都会隐式地开启一个事务
+}
+--good case：
+for(User user: allUsers) {
+   modify(user); // modifies properties of given user
+}
+box.put(allUsers); //在一个事务中提交所有的数据
+
+----Read Transactions
+在ObjectBox中，read transactions比较廉价，因为不涉及同步数据到物理储存中。不过还是建议在一个事务中去查询想要的数据。
+多个read transactions能够并发地执行，并不会阻塞会等待，是因为内存中保存了多个版本的数据，即使一个write transaction正在
+执行，read transaction也能够读取到最新的数据， 为了保证一致的状态，Write transactions是有序的执行的，因此不要在
+Write Transaction中执行耗时的操作，避免阻塞下个Write Transation的执行。
+
+----避免在Write Transaction中分配锁
+避免在Write Transaction中使用锁，比如synchronized、java.util.concurrent.locks。以免造成死锁。
+
+
+三、查询
+四、结合RxJava，监听数据变化
+五、
+
+
+
+
+
+
