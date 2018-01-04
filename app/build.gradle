@@ -1,0 +1,52 @@
+apply plugin: 'com.android.application'
+
+
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven { url "http://objectbox.net/beta-repo/" }
+    }
+    dependencies {
+        classpath 'io.objectbox:objectbox-gradle-plugin:1.3.3'
+    }
+}
+
+apply plugin: 'io.objectbox'
+
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "26.0.0"
+    defaultConfig {
+        applicationId "com.objectbox.example"
+        minSdkVersion 18
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+
+        //----debug ObjectBox annotation processor
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [ 'objectbox.debug' : 'true' ]
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    // ObjectBox browser dependencies must be set before applying ObjectBox plugin so it does not add objectbox-android
+    // (would result in two conflicting versions, e.g. "Duplicate files copied in APK lib/armeabi-v7a/libobjectbox.so").
+//    debugImplementation "io.objectbox:objectbox-android-objectbrowser:1.3.3"
+//    releaseImplementation "io.objectbox:objectbox-android:1.3.3"
+    compile "io.objectbox:objectbox-android:1.3.3"
+    annotationProcessor "io.objectbox:objectbox-processor:1.3.3"
+}
